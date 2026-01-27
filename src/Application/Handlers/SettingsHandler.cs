@@ -1,4 +1,5 @@
 using Libs.Core.Public.src.DTOs.Requests;
+using Libs.Core.Public.src.DTOs.Responses;
 using Libs.Core.Public.src.Interfaces;
 using Libs.Core.Shared.src.DTOs.Responses;
 using Settings.Service.src.Application.DTOs.Requests;
@@ -107,6 +108,19 @@ public sealed class SettingsHandler(IFlyerRepository flyerRep, ILogger<SettingsH
         {
             _logger.LogError(ex, " - An unexpected error occurred...");
             return new ResponseDTO { IsSuccess = false, Message = "An unexpected error occurred..." };
+        }
+    }
+
+    public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyer(CancellationToken ct)
+    {
+        try
+        {
+            return await _flyerRep.GetAllFlyer(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, " - An unexpected error occurred...");
+            return [];
         }
     }
 }

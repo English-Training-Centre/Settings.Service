@@ -1,3 +1,4 @@
+using Libs.Core.Public.src.DTOs.Responses;
 using Npgsql;
 using Settings.Service.src.Application.DTOs.Requests;
 using Settings.Service.src.Application.Interfaces;
@@ -149,6 +150,57 @@ public sealed class FlyerRepository(IPostgresDB db, IHttpContextAccessor httpCon
         catch (Exception ex)
         {
             _logger.LogError(ex, " - Unexpected error during transaction operation.");
+        }
+    }
+
+    public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyer(CancellationToken ct)
+    {
+        const string sql = @"
+            SELECT
+                f.id AS Id,
+                f.image_url AS ImageUrl,
+                f.enrolment_fee AS EnrolmentFee,
+                f.is_active AS IsActive,
+                f.created_at AS CreatedAt,
+
+                jsonb_agg(
+                    jsonb_build_object(
+                        'package', mt.package,
+                        'modality', mt.modality,
+                        'levelA', lf.level_a,
+                        'levelAA', lf.level_aa,
+                        'levelB', lf.level_b,
+                        'levelBB', lf.level_bb,
+                        'levelC', lf.level_c
+                    )
+                ) AS monthly_tuitions
+
+            FROM tbFlyer f
+            JOIN tbFlyerMonthlyTuition mt
+                ON mt.flyer_id = f.id
+            JOIN tbFlyerLevelFee lf
+                ON lf.id = mt.level_fee_id
+            GROUP BY
+                f.id,
+                f.image_url,
+                f.enrolment_fee,
+                f.is_active,
+                f.created_at;
+            ";
+
+        try
+        {
+            return await _db.QueryAsync<SettingsFlyerCreateResponse>(sql, new{}, ct);
+        }
+        catch (PostgresException pgEx)
+        {
+            _logger.LogError(pgEx, " - Unexpected PostgreSQL Error");
+            return [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, " - Unexpected error during transaction operation.");
+            return [];
         }
     }
 }
