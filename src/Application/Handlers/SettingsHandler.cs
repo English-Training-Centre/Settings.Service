@@ -16,7 +16,7 @@ public sealed class SettingsHandler(IFlyerRepository flyerRep, ILogger<SettingsH
     {
         var flyerRequest = new FlyerRequest
         (
-            request.Image,
+            request.ImageUrl,
             request.EnrolmentFee
         );
 

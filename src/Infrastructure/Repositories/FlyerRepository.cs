@@ -2,14 +2,12 @@ using Libs.Core.Public.src.DTOs.Responses;
 using Npgsql;
 using Settings.Service.src.Application.DTOs.Requests;
 using Settings.Service.src.Application.Interfaces;
-using Settings.Service.src.Configuration;
 
 namespace Settings.Service.src.Infrastructure.Repositories;
 
-public sealed class FlyerRepository(IPostgresDB db, IHttpContextAccessor httpContextAcc, ILogger<FlyerRepository> logger) : IFlyerRepository
+public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> logger) : IFlyerRepository
 {
-    private readonly IPostgresDB _db = db;
-    private readonly IHttpContextAccessor _httpContextAcc = httpContextAcc;
+    private readonly IPostgresDB _db = db;    
     private readonly ILogger<FlyerRepository> _logger = logger;
 
     public async Task<Guid> SaveFlyer(FlyerRequest request, CancellationToken ct = default)
@@ -26,15 +24,7 @@ public sealed class FlyerRepository(IPostgresDB db, IHttpContextAccessor httpCon
         ";
 
         try
-        {
-            var imageUrl = string.Empty;
-            if (request.Image is not null && request.Image.Length > 0)
-            {
-                var fileName = await FileUploadConfig.UploadFile(request.Image);
-                var req = _httpContextAcc.HttpContext!.Request;
-                imageUrl = $"{req.Scheme}://{req.Host}/images/{fileName}";
-            }
-
+        {            
             return await _db.ExecuteInTransactionAsync(
                 async (conn, tx) =>
                 {
@@ -45,7 +35,7 @@ public sealed class FlyerRepository(IPostgresDB db, IHttpContextAccessor httpCon
                     // Step 2: Insert the new active flyer
                     await using var insertCmd = new NpgsqlCommand(sqlInsert, conn, tx);
                     
-                    insertCmd.Parameters.AddWithValue("@ImageUrl", imageUrl);
+                    insertCmd.Parameters.AddWithValue("@ImageUrl", request.ImageUrl);
                     
                     insertCmd.Parameters.AddWithValue("@EnrolmentFee", request.EnrolmentFee);
 

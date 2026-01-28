@@ -1,7 +1,9 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Libs.Core.Public.src.Interfaces;
 using Microsoft.Extensions.FileProviders;
 using Npgsql;
+using Settings.Service.src.Application.Handlers;
 using Settings.Service.src.Application.Interfaces;
 using Settings.Service.src.Infrastructure.Persistence;
 using Settings.Service.src.Infrastructure.Repositories;
@@ -32,6 +34,7 @@ public static class MiddlewareConfig
 
             services.AddScoped<IPostgresDB, PostgresDB>();
             services.AddScoped<IFlyerRepository, FlyerRepository>();
+            services.AddScoped<ISettingGrpcService, SettingsHandler>();
 
             services.AddGrpc();
         }
