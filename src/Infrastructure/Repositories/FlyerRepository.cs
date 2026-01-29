@@ -10,7 +10,7 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
     private readonly IPostgresDB _db = db;    
     private readonly ILogger<FlyerRepository> _logger = logger;
 
-    public async Task<Guid> SaveFlyer(FlyerRequest request, CancellationToken ct = default)
+    public async Task<Guid> SaveFlyerAsync(FlyerRequest request, CancellationToken ct = default)
     {
         const string sqlDeactivate = @"
             UPDATE tbFlyer
@@ -58,7 +58,7 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
         }
     }
 
-    public async Task<List<Guid>> SaveLevelFee(LevelFeeRequest request, CancellationToken ct)
+    public async Task<List<Guid>> SaveLevelFeeAsync(LevelFeeRequest request, CancellationToken ct)
     {
         const string sqlInsert = @"
             INSERT INTO tbFlyerLevelFee (level_a, level_aa, level_b, level_bb, level_c)
@@ -123,11 +123,11 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
         }
     }
     
-    public async Task SaveMonthlyTuition(MonthlyTuitionRequest request, CancellationToken ct)
+    public async Task SaveMonthlyTuitionAsync(MonthlyTuitionRequest request, CancellationToken ct)
     {
         const string sql = @"
             INSERT INTO tbFlyerMonthlyTuition (flyer_id, level_fee_id, package, modality)
-            VALUES (@FlyerId, @LevelFeeId, @Package, @Modality)";
+            VALUES (@FlyerId, @LevelFeeId, @Package::package_enum, @Modality::modality_enum)";
 
         try
         {
@@ -143,7 +143,7 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
         }
     }
 
-    public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyer(CancellationToken ct)
+    public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyerAsync(CancellationToken ct)
     {
         const string sql = @"
             SELECT
@@ -157,13 +157,13 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
                     jsonb_build_object(
                         'package', mt.package,
                         'modality', mt.modality,
-                        'levelA', lf.level_a,
-                        'levelAA', lf.level_aa,
-                        'levelB', lf.level_b,
-                        'levelBB', lf.level_bb,
-                        'levelC', lf.level_c
+                        'levelA', COALESCE(lf.level_a, 0)::bigint,
+                        'levelAA', COALESCE(lf.level_aa, 0)::bigint,
+                        'levelB', COALESCE(lf.level_b, 0)::bigint,
+                        'levelBB', COALESCE(lf.level_bb, 0)::bigint,
+                        'levelC', COALESCE(lf.level_c, 0)::bigint
                     )
-                ) AS monthly_tuitions
+                ) AS MonthlyTuitions
 
             FROM tbFlyer f
             JOIN tbFlyerMonthlyTuition mt
@@ -175,12 +175,27 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
                 f.image_url,
                 f.enrolment_fee,
                 f.is_active,
-                f.created_at;
+                f.created_at
+            ORDER BY f.created_at DESC;
             ";
 
         try
         {
-            return await _db.QueryAsync<SettingsFlyerCreateResponse>(sql, new{}, ct);
+            var flyers = await _db.QueryWithJsonListAsync<SettingsFlyerCreateResponse>(
+                sql,
+                (flyer, json) =>
+                {
+                    flyer.MonthlyTuitions = string.IsNullOrWhiteSpace(json)
+                        ? []
+                        : System.Text.Json.JsonSerializer.Deserialize<List<MonthlyTuitionResponse>>(json)!;
+
+                    return flyer;
+                },
+                splitOnColumn: "MonthlyTuitions",
+                cancellationToken: ct
+            );
+
+            return flyers;
         }
         catch (PostgresException pgEx)
         {

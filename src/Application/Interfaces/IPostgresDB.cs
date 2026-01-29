@@ -14,6 +14,13 @@ public interface IPostgresDB
         object? parameters = null,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<T>> QueryWithJsonListAsync<T>(
+    string sql,
+    Func<T, string, T> map,
+    string splitOnColumn,
+    object? parameters = null,
+    CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<T>> QueryAsync<T>(
         string sql,
         object? parameters = null,

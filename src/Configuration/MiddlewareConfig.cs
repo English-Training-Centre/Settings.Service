@@ -1,8 +1,8 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Libs.Core.Public.src.Interfaces;
-using Microsoft.Extensions.FileProviders;
 using Npgsql;
+using Settings.Service.Services;
 using Settings.Service.src.Application.Handlers;
 using Settings.Service.src.Application.Interfaces;
 using Settings.Service.src.Infrastructure.Persistence;
@@ -46,23 +46,7 @@ public static class MiddlewareConfig
 
     public static WebApplication ConfigurePipeline(this WebApplication app)
     {
-        //app.MapGrpcService<HResourceGrpcService>();
-        
-        app.UseDefaultFiles();
-        app.UseStaticFiles();
-        
-        string[] folders = ["images"];
-        foreach (var folder in folders)
-        {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", folder);
-            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
-
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(path),
-                RequestPath = "/" + folder
-            });
-        }
+        app.MapGrpcService<SettingsGrpcService>();
 
         return app;
     }

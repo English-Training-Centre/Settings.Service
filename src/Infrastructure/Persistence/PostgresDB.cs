@@ -36,6 +36,28 @@ public sealed class PostgresDB : IPostgresDB
     }
 
     // ---------- Queries ----------
+    public async Task<IReadOnlyList<T>> QueryWithJsonListAsync<T>(
+        string sql,
+        Func<T, string, T> map,
+        string splitOnColumn,
+        object? parameters = null,
+        CancellationToken cancellationToken = default)
+    {
+        return await _retryPolicy.ExecuteAsync(async () =>
+        {
+            await using var conn = await _dataSource.OpenConnectionAsync(cancellationToken);
+
+            var results = await conn.QueryAsync(
+                sql,
+                map,
+                parameters,
+                splitOn: splitOnColumn
+            );
+
+            return results.AsList().AsReadOnly();
+        });
+    }
+
     public async Task<IReadOnlyList<T>> QueryAsync<T>(
         string sql,
         object? parameters = null,

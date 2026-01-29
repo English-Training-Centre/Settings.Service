@@ -12,7 +12,7 @@ public sealed class SettingsHandler(IFlyerRepository flyerRep, ILogger<SettingsH
     private readonly IFlyerRepository _flyerRep = flyerRep;
     private readonly ILogger<SettingsHandler> _logger = logger;
 
-    public async Task<ResponseDTO> CreateFlyer(SettingsFlyerCreateRequest request, CancellationToken ct)
+    public async Task<ResponseDTO> CreateFlyerAsync(SettingsFlyerCreateRequest request, CancellationToken ct)
     {
         var flyerRequest = new FlyerRequest
         (
@@ -61,8 +61,8 @@ public sealed class SettingsHandler(IFlyerRepository flyerRep, ILogger<SettingsH
 
         try
         {
-            Guid flyerId = await _flyerRep.SaveFlyer(flyerRequest, ct);
-            List<Guid> levelFeeIds = await _flyerRep.SaveLevelFee(levelFeeRequest, ct);
+            Guid flyerId = await _flyerRep.SaveFlyerAsync(flyerRequest, ct);
+            List<Guid> levelFeeIds = await _flyerRep.SaveLevelFeeAsync(levelFeeRequest, ct);
 
             if (flyerId.Equals(Guid.Empty))
             {
@@ -94,7 +94,7 @@ public sealed class SettingsHandler(IFlyerRepository flyerRep, ILogger<SettingsH
                         list.Modality
                     );
 
-                    await _flyerRep.SaveMonthlyTuition(monthlyTuitionRequest, ct);
+                    await _flyerRep.SaveMonthlyTuitionAsync(monthlyTuitionRequest, ct);
                 }
 
                 return new ResponseDTO
@@ -111,11 +111,11 @@ public sealed class SettingsHandler(IFlyerRepository flyerRep, ILogger<SettingsH
         }
     }
 
-    public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyer(CancellationToken ct)
+    public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyerAsync(CancellationToken ct)
     {
         try
         {
-            return await _flyerRep.GetAllFlyer(ct);
+            return await _flyerRep.GetAllFlyerAsync(ct);
         }
         catch (Exception ex)
         {

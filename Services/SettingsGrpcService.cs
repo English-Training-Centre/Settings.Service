@@ -57,7 +57,7 @@ public sealed class SettingsGrpcService (ISettingGrpcService settingHandler, ILo
 
         try
         {
-            var result = await _settingHandler.CreateFlyer(parameter, context.CancellationToken);
+            var result = await _settingHandler.CreateFlyerAsync(parameter, context.CancellationToken);
 
             var protoResponse = new GrpcSettingsResponseDTO
             {
@@ -78,40 +78,39 @@ public sealed class SettingsGrpcService (ISettingGrpcService settingHandler, ILo
     {
         try
         {
-            var flyers = await _settingHandler.GetAllFlyer(context.CancellationToken);
+            var flyers = await _settingHandler.GetAllFlyerAsync(context.CancellationToken);
 
-            var latestFlyer = flyers
-                .OrderByDescending(f => f.CreatedAt)
-                .FirstOrDefault(f => f.IsActive);
+            var protoResponse = new GrpcSettingsFlyerGetAllResponse();
 
-            if (latestFlyer == null)
+        // Map each flyer to the gRPC response format
+        foreach (var flyer in flyers)
+        {
+            var flyerResponse = new GrpcSettingsFlyerGetResponse
             {
-                return new GrpcSettingsFlyerGetAllResponse();
-            }
-
-            var protoResponse = new GrpcSettingsFlyerGetAllResponse
-            {
-                Id          = latestFlyer.Id.ToString(),
-                ImageUrl    = latestFlyer.ImageUrl ?? "",
-                EnrolmentFee = latestFlyer.EnrolmentFee,
-                IsActive    = latestFlyer.IsActive,
-                CreatedAt   = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(latestFlyer.CreatedAt.ToUniversalTime()),
+                Id = flyer.Id.ToString(),
+                ImageUrl = flyer.ImageUrl ?? "",
+                EnrolmentFee = flyer.EnrolmentFee,
+                IsActive = flyer.IsActive,
+                CreatedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(flyer.CreatedAt.ToUniversalTime()),
             };
 
-            protoResponse.MonthlyTuitions.AddRange(
-                latestFlyer.MonthlyTuitions.Select(m => new GrpcSettingsFlyerMonthlyTuitionResponse
+            flyerResponse.MonthlyTuitions.AddRange(
+                flyer.MonthlyTuitions.Select(m => new GrpcSettingsFlyerMonthlyTuitionResponse
                 {
-                    Package   = m.Package   ?? "",
-                    Modality  = m.Modality  ?? "",
-                    LevelA    = m.LevelA,
-                    LevelAA   = m.LevelAA,
-                    LevelB    = m.LevelB,
-                    LevelBB   = m.LevelBB,
-                    LevelC    = m.LevelC
+                    Package = m.Package ?? "",
+                    Modality = m.Modality ?? "",
+                    LevelA = m.LevelA,
+                    LevelAA = m.LevelAA,
+                    LevelB = m.LevelB,
+                    LevelBB = m.LevelBB,
+                    LevelC = m.LevelC
                 })
             );
 
-            return protoResponse;
+            protoResponse.Flyers.Add(flyerResponse);
+        }
+
+        return protoResponse;
         }
         catch (Exception ex)
         {
