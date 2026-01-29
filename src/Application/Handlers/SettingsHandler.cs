@@ -111,6 +111,19 @@ public sealed class SettingsHandler(IFlyerRepository flyerRep, ILogger<SettingsH
         }
     }
 
+    public async Task<IReadOnlyList<SettingsFlyerCardResponse>> GetCardFlyerAsync(CancellationToken ct)
+    {
+        try
+        {
+            return await _flyerRep.GetCardFlyerAsync(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, " - An unexpected error occurred...");
+            return [];
+        }
+    }
+
     public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyerAsync(CancellationToken ct)
     {
         try

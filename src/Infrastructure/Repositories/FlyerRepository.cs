@@ -143,6 +143,35 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
         }
     }
 
+    public async Task<IReadOnlyList<SettingsFlyerCardResponse>> GetCardFlyerAsync(CancellationToken ct)
+    {
+        const string sql = @"
+            SELECT
+                id AS Id,
+                image_url AS ImageUrl,
+                enrolment_fee AS EnrolmentFee,
+                is_active AS IsActive,
+                created_at AS CreatedAt
+            FROM tbFlyer
+            ORDER BY created_at DESC;
+            ";
+
+        try
+        {
+            return await _db.QueryAsync<SettingsFlyerCardResponse>(sql, new{}, ct);
+        }
+        catch (PostgresException pgEx)
+        {
+            _logger.LogError(pgEx, " - Unexpected PostgreSQL Error");
+            return [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, " - Unexpected error during transaction operation.");
+            return [];
+        }
+    }
+
     public async Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyerAsync(CancellationToken ct)
     {
         const string sql = @"

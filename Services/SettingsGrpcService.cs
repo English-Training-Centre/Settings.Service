@@ -91,7 +91,7 @@ public sealed class SettingsGrpcService (ISettingGrpcService settingHandler, ILo
                 ImageUrl = flyer.ImageUrl ?? "",
                 EnrolmentFee = flyer.EnrolmentFee,
                 IsActive = flyer.IsActive,
-                CreatedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(flyer.CreatedAt.ToUniversalTime()),
+                CreatedAt = Timestamp.FromDateTime(flyer.CreatedAt.ToUniversalTime()),
             };
 
             flyerResponse.MonthlyTuitions.AddRange(
@@ -116,6 +116,31 @@ public sealed class SettingsGrpcService (ISettingGrpcService settingHandler, ILo
         {
             _logger.LogError(ex, "Error in SettingsGrpcService.GetAllFlyer()");
             throw new RpcException(new Status(StatusCode.Internal, "Failed to retrieve flyer settings"));
+        }
+    }
+
+    public async override Task<GrpcSettingsFlyerGetAllCardResponse> GetCardFlyer(Empty request, ServerCallContext context)
+    {
+        try
+        {
+            var result = await _settingHandler.GetCardFlyerAsync(context.CancellationToken);
+
+            var protoResponse = new GrpcSettingsFlyerGetAllCardResponse();
+            protoResponse.Flyers.AddRange(result.Select(f => new GrpcSettingsFlyerGetCardResponse
+            {
+                Id = f.Id.ToString(),
+                ImageUrl = f.ImageUrl ?? string.Empty,
+                EnrolmentFee = f.EnrolmentFee,
+                IsActive = f.IsActive,
+                CreatedAt = Timestamp.FromDateTime(f.CreatedAt.ToUniversalTime())
+            }));
+
+            return protoResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error: SettingsGrpcService -> GetCardFlyer(....)");
+            throw new RpcException(new Status(StatusCode.Internal, "Failed to get all flyer card.."));
         }
     }
 }
