@@ -1,5 +1,6 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using Libs.Core.Internal.src.Interfaces;
 using Libs.Core.Public.src.Interfaces;
 using Npgsql;
 using Settings.Service.Services;
@@ -32,9 +33,10 @@ public static class MiddlewareConfig
             services.AddHealthChecks()
                     .AddNpgSql(nd => nd.GetRequiredService<NpgsqlDataSource>());
 
-            services.AddScoped<IPostgresDB, PostgresDB>();
-            services.AddScoped<IFlyerRepository, FlyerRepository>();
+            services.AddScoped<IPostgresDB, PostgresDB>();            
             services.AddScoped<ISettingGrpcService, SettingsHandler>();
+            services.AddScoped<IFlyerRepository, FlyerRepository>();
+            services.AddScoped<ISettingFlyerIdGrpcService, FlyerIdHandler>();
 
             services.AddGrpc();
         }

@@ -10,6 +10,14 @@ public sealed class FlyerIdHandler (IFlyerRepository flyerRep, ILogger<SettingsH
 
     public async Task<Guid> GetFlyerId(CancellationToken ct)
     {
-        throw new NotImplementedException();
+        try
+        {
+            return await _flyerRep.GetFlyerId(ct);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, " - Unexpected error during transaction operation.");
+            return Guid.Empty;
+        }
     }
 }

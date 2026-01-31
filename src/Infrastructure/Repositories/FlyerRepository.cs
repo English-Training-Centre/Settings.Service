@@ -240,20 +240,11 @@ public sealed class FlyerRepository(IPostgresDB db, ILogger<FlyerRepository> log
 
     public async Task<Guid> GetFlyerId(CancellationToken ct)
     {
-        const string sql = @"
-            SELECT
-                id AS Id,
-                image_url AS ImageUrl,
-                enrolment_fee AS EnrolmentFee,
-                is_active AS IsActive,
-                created_at AS CreatedAt
-            FROM tbFlyer
-            ORDER BY created_at DESC;
-            ";
+        const string sql = @"SELECT id FROM tbFlyer WHERE is_active = TRUE LIMIT 1;";
 
         try
         {
-            return await _db.QueryAsync<SettingsFlyerCardResponse>(sql, new{}, ct);
+            return await _db.QueryFirstOrDefaultAsync<Guid>(sql, new{}, ct);
         }
         catch (PostgresException pgEx)
         {

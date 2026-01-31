@@ -82,35 +82,35 @@ public sealed class SettingsGrpcService (ISettingGrpcService settingHandler, ILo
 
             var protoResponse = new GrpcSettingsFlyerGetAllResponse();
 
-        // Map each flyer to the gRPC response format
-        foreach (var flyer in flyers)
-        {
-            var flyerResponse = new GrpcSettingsFlyerGetResponse
+            // Map each flyer to the gRPC response format
+            foreach (var flyer in flyers)
             {
-                Id = flyer.Id.ToString(),
-                ImageUrl = flyer.ImageUrl ?? "",
-                EnrolmentFee = flyer.EnrolmentFee,
-                IsActive = flyer.IsActive,
-                CreatedAt = Timestamp.FromDateTime(flyer.CreatedAt.ToUniversalTime()),
-            };
-
-            flyerResponse.MonthlyTuitions.AddRange(
-                flyer.MonthlyTuitions.Select(m => new GrpcSettingsFlyerMonthlyTuitionResponse
+                var flyerResponse = new GrpcSettingsFlyerGetResponse
                 {
-                    Package = m.Package ?? "",
-                    Modality = m.Modality ?? "",
-                    LevelA = m.LevelA,
-                    LevelAA = m.LevelAA,
-                    LevelB = m.LevelB,
-                    LevelBB = m.LevelBB,
-                    LevelC = m.LevelC
-                })
-            );
+                    Id = flyer.Id.ToString(),
+                    ImageUrl = flyer.ImageUrl ?? "",
+                    EnrolmentFee = flyer.EnrolmentFee,
+                    IsActive = flyer.IsActive,
+                    CreatedAt = Timestamp.FromDateTime(flyer.CreatedAt.ToUniversalTime()),
+                };
 
-            protoResponse.Flyers.Add(flyerResponse);
-        }
+                flyerResponse.MonthlyTuitions.AddRange(
+                    flyer.MonthlyTuitions.Select(m => new GrpcSettingsFlyerMonthlyTuitionResponse
+                    {
+                        Package = m.Package ?? "",
+                        Modality = m.Modality ?? "",
+                        LevelA = m.LevelA,
+                        LevelAA = m.LevelAA,
+                        LevelB = m.LevelB,
+                        LevelBB = m.LevelBB,
+                        LevelC = m.LevelC
+                    })
+                );
 
-        return protoResponse;
+                protoResponse.Flyers.Add(flyerResponse);
+            }
+
+            return protoResponse;
         }
         catch (Exception ex)
         {
