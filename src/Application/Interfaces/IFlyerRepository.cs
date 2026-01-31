@@ -10,4 +10,5 @@ public interface IFlyerRepository
     Task SaveMonthlyTuitionAsync(MonthlyTuitionRequest request, CancellationToken ct);
     Task<IReadOnlyList<SettingsFlyerCardResponse>> GetCardFlyerAsync(CancellationToken ct);
     Task<IReadOnlyList<SettingsFlyerCreateResponse>> GetAllFlyerAsync(CancellationToken ct);
+    Task<Guid> GetFlyerId(CancellationToken ct);
 }
